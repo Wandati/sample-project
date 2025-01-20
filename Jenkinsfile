@@ -1,28 +1,44 @@
 pipeline {
     agent any 
-    environment  {
+    environment {
         EC2_INSTANCE_IP = "13.247.185.39"
         SSH_KEY_PATH = '~/.ssh/ci-cd-key.pem' 
         AWS_ACCOUNT_ID = credentials('ACCOUNT_ID')
         AWS_ECR_REPO_NAME = credentials('ECR_REPO')
         AWS_DEFAULT_REGION = 'af-south-1'
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/"
+        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
     }
+    
     stages {
         stage('Cleaning Workspace') {
             steps {
                 cleanWs()
             }
         }
+        
         stage('Checkout from Git') {
             steps {
                 git branch: "main", url: 'https://github.com/Wandati/sample-project.git'
             }
         }
+<<<<<<< HEAD
         stage('Trivy File Scan') {
             steps {
                 dir('static') {
                     sh 'trivy fs . > trivyfs.txt'
+=======
+        
+        stage('Trivy File Scan') {
+            steps {
+                dir('static') {
+                    sh '''
+                        trivy fs . \
+                            --severity HIGH,CRITICAL \
+                            --format table \
+                            --output trivyfs.txt
+                    '''
+>>>>>>> b10447d (Jenkins pipeline configurations)
                 }
             }
         }
@@ -30,41 +46,67 @@ pipeline {
         stage("Docker Image Build") {
             steps {
                 script {
+<<<<<<< HEAD
 
                     sh 'docker system prune -f'
                     sh 'docker container prune -f'
                     sh 'docker build -t ${AWS_ECR_REPO_NAME} .'
                     
+=======
+                    sh 'docker system prune -f'
+                    sh 'docker container prune -f'
+                    sh 'docker build -t ${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} .'
+>>>>>>> b10447d (Jenkins pipeline configurations)
                 }
             }
         }
+        
         stage("ECR Image Pushing") {
             steps {
                 script {
-                        sh 'aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}'
-                        sh 'docker tag ${AWS_ECR_REPO_NAME} ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}'
-                        sh 'docker push ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}'
+                    sh '''
+                        aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | \
+                        docker login --username AWS --password-stdin ${REPOSITORY_URI}
+                        
+                        docker tag ${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                        docker push ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                    '''
                 }
             }
         }
+        
         stage("TRIVY Image Scan") {
             steps {
-                sh 'trivy image ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER} > trivyimage.txt' 
+                sh '''
+                    trivy image \
+                        --severity HIGH,CRITICAL \
+                        --format table \
+                        ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} \
+                        --output trivyimage.txt
+                '''
             }
         }
+        
         stage('Deploy to EC2') {
             steps {
                 script {
-                    // SSH into the EC2 instance and pull the Docker image to run it
                     sh """
-                    ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} << 'EOF'
-                    docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${DOCKER_TAG}
-                    docker stop sample-app || true
-                    docker rm sample-app || true
-                    docker run -d --name sample-app -p 80:8080 ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${DOCKER_TAG}
-                    EOF
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} << 'EOF'
+                        aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
+                        
+                        docker pull ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                        docker stop sample-app || true
+                        docker rm sample-app || true
+                        docker run -d \
+                            --name sample-app \
+                            --restart unless-stopped \
+                            -p 80:8080 \
+                            ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                        EOF
                     """
                 }
+            }
         }
     }
+    
 }
