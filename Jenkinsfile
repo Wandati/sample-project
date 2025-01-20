@@ -26,8 +26,15 @@ pipeline {
         stage('Trivy File Scan') {
             steps {
                 dir('static') {
-                    sh 'trivy fs . > trivyfs.txt'
-
+                    sh '''
+                        trivy fs . \
+                            --severity HIGH,CRITICAL \
+                            --format table \
+                            --output trivyfs.txt
+                    '''
+                }
+            }
+        }
         
         stage("Docker Image Build") {
             steps {
@@ -86,5 +93,5 @@ pipeline {
             }
         }
     }
-    
+
 }
