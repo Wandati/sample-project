@@ -17,6 +17,10 @@ data "aws_ami" "latest_ubuntu" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+  filter {
+    name   = "architecture"
+    values = ["x86_64"] 
+  }
 }
 
 # VPC module
