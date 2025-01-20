@@ -76,27 +76,25 @@ pipeline {
                 script {
                     withAWS(credentials: 'AWS-CREDS', region: "${AWS_DEFAULT_REGION}") {
                         sh """
-                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} \\
-
-                            'aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI} && \\
-                        
+                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} <<EOF
+                            # Log in to ECR
+                            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
+                            
                             # Stop and remove the container if it exists
-                            docker rm -f sample-app || true && \\
-                        
+                            docker rm -f sample-app || true
+                            
                             # Pull the latest Docker image
-                            docker pull ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} && \\
-                        
+                            docker pull ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                            
                             # Run the new container
-                            docker run -d -p 80:8080 --name sample-app ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}'
+                            docker run -d -p 80:8080 --name sample-app ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                            
+                            EOF
                         """
                     }
                 }
             }
         }
-
-
-       
-        
         
     }
 
