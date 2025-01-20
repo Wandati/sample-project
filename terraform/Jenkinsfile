@@ -1,0 +1,54 @@
+
+pipeline {
+    agent any
+    parameters {
+        choice(
+            name: 'Terraform_Action',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Select the Terraform action to perform'
+        )
+    }
+    stages {
+        stage('Preparing') {
+            steps {
+                sh 'echo Preparing'
+            }
+        }
+        stage('Git Pulling') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Wandati/sample-project.git'
+            }
+        }
+        stage('Init') {
+            steps {
+                withAWS(credentials: 'AWS-CREDS', region: 'af-south-1') {
+                sh 'terraform -chdir=terraform/ init'
+                }
+            }
+        }
+        stage('Validate') {
+            steps {
+                withAWS(credentials: 'AWS-CREDS', region: 'af-south-1') {
+                sh 'terraform -chdir=terraform/ validate'
+                }
+            }
+        }
+        stage('Action') {
+            steps {
+                withAWS(credentials: 'AWS-CREDS', region: 'af-south-1') {
+                    script {    
+                        if (params.Terraform_Action == 'plan') {
+                            sh "terraform -chdir=terraform/ plan "
+                        }   else if (params.Terraform_Action == 'apply') {
+                            sh "terraform -chdir=terraform/ apply  -auto-approve"
+                        }   else if (params.Terraform_Action == 'destroy') {
+                            sh "terraform -chdir=terraform/ destroy  -auto-approve"
+                        } else {
+                            error "Invalid value for Terraform_Action: ${params.Terraform_Action}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
