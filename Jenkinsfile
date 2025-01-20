@@ -88,7 +88,6 @@ pipeline {
                             
                             # Run the new container
                             docker run -d -p 80:8080 --name sample-app ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
-                            
                             EOF
                         """
                     }
