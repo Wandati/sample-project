@@ -22,41 +22,19 @@ pipeline {
                 git branch: "main", url: 'https://github.com/Wandati/sample-project.git'
             }
         }
-<<<<<<< HEAD
+        
         stage('Trivy File Scan') {
             steps {
                 dir('static') {
                     sh 'trivy fs . > trivyfs.txt'
-=======
-        
-        stage('Trivy File Scan') {
-            steps {
-                dir('static') {
-                    sh '''
-                        trivy fs . \
-                            --severity HIGH,CRITICAL \
-                            --format table \
-                            --output trivyfs.txt
-                    '''
->>>>>>> b10447d (Jenkins pipeline configurations)
-                }
-            }
-        }
+
         
         stage("Docker Image Build") {
             steps {
                 script {
-<<<<<<< HEAD
-
-                    sh 'docker system prune -f'
-                    sh 'docker container prune -f'
-                    sh 'docker build -t ${AWS_ECR_REPO_NAME} .'
-                    
-=======
                     sh 'docker system prune -f'
                     sh 'docker container prune -f'
                     sh 'docker build -t ${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} .'
->>>>>>> b10447d (Jenkins pipeline configurations)
                 }
             }
         }
