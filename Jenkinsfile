@@ -19,9 +19,11 @@ pipeline {
                 git branch: "main", url: 'https://github.com/Wandati/sample-project.git'
             }
         }
-        stage('Trivy File scan'){
+        stage('Trivy File Scan') {
             steps {
-                sh 'trivy filesystem --exit-code 0 --severity HIGH,CRITICAL --no-progress . > trivyfile.txt'
+                dir('static') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
             }
         }
         
