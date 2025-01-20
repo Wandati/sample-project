@@ -49,13 +49,13 @@ pipeline {
         stage("ECR Image Pushing") {
             steps {
                 script {
-                    sh '''
-                        aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | \
-                        docker login --username AWS --password-stdin ${REPOSITORY_URI}
-                        
-                        docker tag ${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
-                        docker push ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
-                    '''
+                    withAWS(credentials: 'AWS-CREDS', region: "${AWS_DEFAULT_REGION}") {
+                        sh '''
+                            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
+                            docker tag ${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG} ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                            docker push ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                        '''
+                    }
                 }
             }
         }
@@ -71,27 +71,31 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Deploy to EC2') {
             steps {
                 script {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} << 'EOF'
-                        aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
-                        
-                        docker pull ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
-                        docker stop sample-app || true
-                        docker rm sample-app || true
-                        docker run -d \
-                            --name sample-app \
-                            --restart unless-stopped \
-                            -p 80:8080 \
-                            ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
-                        EOF
-                    """
+                    withAWS(credentials: 'AWS-CREDS', region: "${AWS_DEFAULT_REGION}") {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} << 'EOF'
+                            aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
+                            
+                            docker pull ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                            docker stop sample-app || true
+                            docker rm sample-app || true
+                            docker run -d \
+                                --name sample-app \
+                                --restart unless-stopped \
+                                -p 80:8080 \
+                                ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${DOCKER_IMAGE_TAG}
+                            EOF
+                        """
+                    }
                 }
             }
         }
+        
+        
     }
 
 }
