@@ -76,7 +76,7 @@ pipeline {
                 script {
                     withAWS(credentials: 'AWS-CREDS', region: "${AWS_DEFAULT_REGION}") {
                         sh """
-                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} <<EOF
+                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_INSTANCE_IP} <<'EOF'
                             # Log in to ECR
                             aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
                             
