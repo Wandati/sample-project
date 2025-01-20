@@ -2,7 +2,7 @@ pipeline {
     agent any 
     environment {
         EC2_INSTANCE_IP = "13.247.185.39"
-        SSH_KEY_PATH = 'ci-cd-key.pem' 
+        SSH_KEY_PATH = '~/.ssh/ci-cd-key.pem' 
         AWS_ACCOUNT_ID = credentials('ACCOUNT_ID')
         AWS_ECR_REPO_NAME = credentials('ECR_REPO')
         AWS_DEFAULT_REGION = 'af-south-1'
