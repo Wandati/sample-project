@@ -1,5 +1,4 @@
 
-
 ## Introduction
 
 This project demonstrates a comprehensive DevOps workflow for a web application, showcasing skills in -:
@@ -32,7 +31,6 @@ This project demonstrates a comprehensive DevOps workflow for a web application,
 
 ## Repository Structure
 
-.
 ├── app/                   # Application source code
 
 ├── docker-compose.yml     # Docker Compose configuration
