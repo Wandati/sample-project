@@ -1,7 +1,7 @@
 pipeline {
     agent any 
     environment {
-        EC2_INSTANCE_IP = "13.246.2.110"  // Updated to your current EC2 IP
+        EC2_INSTANCE_IP = "13.247.111.219"  // Updated to your current EC2 IP
         SSH_KEY_PATH = '/var/lib/jenkins/ci-cd-key.pem' 
         AWS_ACCOUNT_ID = credentials('ACCOUNT_ID')
         AWS_ECR_REPO_NAME = credentials('ECR_REPO')
