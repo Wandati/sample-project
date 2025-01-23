@@ -1,0 +1,2 @@
+[webservers]
+13.247.111.219 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/ci-cd-key.pem

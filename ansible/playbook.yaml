@@ -1,0 +1,57 @@
+
+---
+- hosts: webservers
+  become: yes
+  tasks:
+    # Create devops group
+    - name: Create devops group
+      group:
+        name: devops
+        state: present
+
+    # Install required packages
+    - name: Install required system packages
+      apt:
+        pkg:
+          - postgresql
+          - postgresql-contrib
+          - nginx
+          - python3-psycopg2
+        state: latest
+        update_cache: yes
+
+    # Copy configuration file with specific permissions
+    - name: Copy config file to /opt/ with restricted permissions
+      copy:
+        src: files/config.txt
+        dest: /opt/config.txt
+        owner: root
+        group: devops
+        mode: '0660'
+
+    # Configure PostgreSQL
+    - name: Ensure PostgreSQL is running and enabled
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    # Configure Nginx
+    - name: Ensure Nginx is running and enabled
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # Basic Nginx configuration
+    - name: Configure Nginx default site
+      template:
+        src: templates/nginx-default.conf.j2
+        dest: /etc/nginx/sites-available/default
+      notify: Restart Nginx
+
+  handlers:
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted

@@ -1,0 +1,4 @@
+# Sample configuration file for demonstration
+database_host=localhost
+database_port=5432
+log_level=info
