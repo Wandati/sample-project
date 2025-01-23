@@ -34,12 +34,19 @@ This project demonstrates a comprehensive DevOps workflow for a web application,
 
 .
 ├── app/                   # Application source code
+
 ├── docker-compose.yml     # Docker Compose configuration
+
 ├── Dockerfile             # Docker image definition
+
 ├── terraform/             # Terraform IaC scripts
+
 ├── ansible/               # Ansible playbooks and templates
+
 ├── Jenkinsfile_infra      # Jenkinsfile for infrastructure provisioning
+
 ├── Jenkinsfile_app        # Jenkinsfile for application deployment
+
 ├── README.md              # Project documentation (this file)
 
 ## Task Breakdown
